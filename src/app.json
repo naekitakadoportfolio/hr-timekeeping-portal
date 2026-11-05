@@ -1,0 +1,4 @@
+{"title":"HR Timekeeping Portal","brand":"TIMEKEEPING PORTAL","theme":"silver","storageKey":"hrtDemo","desc":"Contractor timekeeping, approvals, leave and payroll support",
+"nav":[["dashboard","🏠 Dashboard"],["clock","⏱ Time clock"],["timesheets","🗓 Timesheets"],["approvals","✅ Approvals"],["leave","🏖 Leave"],["payroll","💵 Payroll & payslips"],["people","👥 People & roles"],["imports","📥 Imports"],["activity","🔔 Activity"]],
+"sidebarExtra":"<div class='who'><label>Signed in as (demo)</label><select id='meSel' onchange=\"S.me=this.value;route()\"></select><p class='muted' id='roleL'></p></div>",
+"appJs":"/home/claude/repos2/hr-timekeeping-portal/src/app.js"}

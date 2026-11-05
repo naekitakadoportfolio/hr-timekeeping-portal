@@ -10,30 +10,66 @@
 
 # HR Timekeeping Portal
 
-A timekeeping and payroll-support portal for remote contractors. Clock in and out, submit a correction, then switch to Timekeeper or HR to approve it and watch the payslip update.
+A timekeeping and payroll-support portal for remote contractors: live time clock with breaks, cutoff timesheets, corrections and leave with approvals, policy-based balances, payroll and payslips in multiple currencies, CSV exports, people and role management, and historical leave imports.
 
-> **Portfolio rebuild.** This is a from-scratch recreation of a production system I designed and run, rebuilt with **fictional data** and no client names, code or branding. The live demo runs entirely in the browser.
+> **Portfolio rebuild.** A from-scratch recreation of a lightweight HR portal built to replace a paid time tracker for a remote contractor team, a production system I designed. It uses **fictional data**, with no client names, code or branding.
 
-## The problem
-A remote contractor team tracked time in a paid time tracker that didn't handle local leave policy, hourly contractors in other countries, or payroll and invoicing support.
+## ✨ Features
+- **Dashboard:** hours this cutoff, leave left, who's on shift, items to approve and the cutoff payroll total
+- **Time clock:** clock in/out with a live timer and breaks (demo speed: 1 s = 1 min)
+- **Timesheets:** calendar grid per semi-monthly cutoff, approved hours, leave overlay, submit for review, request corrections
+- **Approvals:** Timekeeper approves time corrections; HR approves leave with balance-after shown
+- **Leave:** requests validated against policy balances, plus a month calendar of team leave
+- **Payroll & payslips:** hourly and fixed contractors, USD/PHP/PKR display, payslip modal, invoice CSV export (file download)
+- **People & roles:** HR/Admin edit roles and rates and add contractors (country-specific leave policy)
+- **Imports:** paste historical leave CSV → row-level validation preview → apply valid rows
+- **Activity:** full audit trail
+- **Light/dark theme**, responsive layout, state saved in your browser, and a one-click demo reset
 
-## Impact in production
-Built a lightweight portal to replace the paid tool: clock-in/out, corrections with approval, leave by policy, payslip and invoice support, and HR, Timekeeper and Admin roles. It was designed so ownership can be handed to HR later, with data fully separate from other systems.
+## 🧭 Try it
+1. As **Ava Reyes**, clock in, take a break, clock out
+2. Open *Timesheets* → **Request correction**
+3. Switch to **Tina Go** (Timekeeper) → *Approvals* → approve
+4. Switch to **Hana Sy** (HR) → *Payroll* → change currency → **Export invoice CSV**
 
-## What it demonstrates
-| Capability | How |
-|---|---|
-| Self-service time tracking | Clock in/out with live shift state |
-| Approval workflow | Corrections routed to Timekeeper or HR |
-| Role-based access | Employee, Timekeeper, HR and Admin Manager |
-| Payroll support | Approved hours × rate → payslip/invoice |
-| Data migration | CSV upload of historical leave usage |
+Open the **[live demo](https://naekitakadoportfolio.github.io/hr-timekeeping-portal/)**.
 
-## Production architecture
-Apps Script web app (HTML Service) · Sheets as data store · role table · CSV import · light/dark themed UI · designed for ownership handover
+## 🏗 Production architecture
+| Layer | Production | This demo |
+|---|---|---|
+| UI | Apps Script HTML Service web app | Static SPA (`index.html`) |
+| Data | Google Sheets (shifts, leave, people) | `localStorage` |
+| Roles | Role table keyed by Google account | Signed-in-as switcher |
+| Exports | Sheet export / Drive CSV | Blob download |
+| Imports | CSV upload to staging sheet | Paste → preview → apply |
 
-## Try it
-Open the **[live demo](https://naekitakadoportfolio.github.io/hr-timekeeping-portal/)** or run `index.html` locally. No install needed.
+## 📁 Project structure
+```
+hr-timekeeping-portal/
+├── index.html        # built app (shell + app code)
+├── src/app.js        # views, state and business logic
+├── src/app.json      # navigation, theme and build config
+├── assets/banner.svg
+├── README.md
+└── LICENSE
+```
+
+## 🚀 Run locally
+No build step needed. Open `index.html` in a browser, or serve it:
+```bash
+python3 -m http.server 8000   # then visit http://localhost:8000
+```
+
+## 🧩 Key implementation notes
+- `hours()` sums approved shifts inside the selected cutoff
+- `gross()` pays hourly contractors on approved hours and fixed contractors half-monthly
+- Corrections become approved shifts only after Timekeeper approval
+- Imports validate the person, leave type and date format before anything is written
+
+## 🗺 Roadmap
+- Overtime and night-differential rules
+- Holiday calendar per country
+- Bulk payslip PDF export
 
 ---
 <p align="center"><sub>Built by <b>Nae Kitakado</b>, AI Automation Consultant · <a href="https://www.linkedin.com/in/nae-k-203194265">LinkedIn</a> · <a href="https://sider.ai/agents/web-creator/share/695ea81100a621619985fdfb">Portfolio</a> · open to retainer &amp; part-time consulting</sub></p>

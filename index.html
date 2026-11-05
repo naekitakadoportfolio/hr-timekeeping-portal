@@ -1,7 +1,6 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>HR Timekeeping Portal · Nae Kitakado</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<style>
+<title>HR Timekeeping Portal · Demo</title><meta name="description" content="Contractor timekeeping, approvals, leave and payroll support">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"><style>
 :root{--bg1:#F4F6F9;--bg2:#E6EAF0;--ink:#0F2A44;--mauve:#5B6B7C;--cocoa:#0F2A44;--sky:#C0C8D2;--card:rgba(255,255,255,.85);--line:rgba(15,42,68,.12);--blush:rgba(192,200,210,.28);--rose:#C0C8D2;--ok-bg:#DDF1E4;--ok:#1E5A36;--warn-bg:#FCEBC8;--warn:#7A4E12;--bad-bg:#F8D7DA;--bad:#8A2C3A}
 [data-theme=dark]{--bg1:#0A1726;--bg2:#13263B;--ink:#E8EDF3;--mauve:#A3AFBD;--card:rgba(19,38,59,.75);--line:rgba(192,200,210,.18);--blush:rgba(192,200,210,.10);--cocoa:#C0C8D2;--ok-bg:rgba(46,160,90,.2);--ok:#8FE0AE;--warn-bg:rgba(230,160,40,.2);--warn:#F5C97A;--bad-bg:rgba(220,80,90,.2);--bad:#F5A3AC}
 *{box-sizing:border-box}body{margin:0;font-family:Inter,'Segoe UI',system-ui,sans-serif;color:var(--ink);background:linear-gradient(160deg,var(--bg1),var(--bg2));background-attachment:fixed;min-height:100vh}
@@ -26,29 +25,126 @@ table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;p
 pre{background:#0B1E2A;color:#CFE8F4;border-radius:10px;padding:12px;font-size:12px;overflow:auto;max-height:320px}
 footer{text-align:center;font-size:12px;color:var(--mauve);margin-top:28px}a{color:var(--cocoa)}.muted{color:var(--mauve);font-size:13px}
 .hero:after{display:none}
-</style></head><body><div class="wrap"><div class="topbar"><span class="brand">PORTAL · DEMO</span><button class="ghost" id="themeBtn" style="margin:0;padding:6px 12px" onclick="(()=>{const h=document.documentElement,n=h.dataset.theme==='dark'?'light':'dark';h.dataset.theme=n;try{localStorage.setItem('demoTheme',n)}catch(e){};themeBtn.textContent=n==='dark'?'☀️ Light':'🌙 Dark'})()">🌙 Dark</button></div>
-<script>try{const s=localStorage.getItem('demoTheme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.dataset.theme=s;addEventListener('DOMContentLoaded',()=>themeBtn.textContent=s==='dark'?'☀️ Light':'🌙 Dark')}catch(e){}</script>
-<div class="hero"><span class="tag">LIVE DEMO · FICTIONAL DATA</span><h1>HR Timekeeping Portal</h1><p>A timekeeping and payroll-support portal for remote contractors. Clock in and out, submit a correction, then switch to Timekeeper or HR to approve it and watch the payslip update.</p></div><div class="grid"><div class="card"><h2>1 · Employee self-service</h2>
-<label>Employee</label><select id="emp" onchange="draw()"></select>
-<div id="clock" style="margin-top:10px"></div>
-<label>Add a past shift (correction)</label><div style="display:flex;gap:6px"><input id="cd" type="date" value="2026-11-03"><input id="ch" type="number" value="8" style="max-width:90px"></div>
-<button class="ghost" onclick="addShift()">SUBMIT CORRECTION</button></div>
-<div class="card"><h2>2 · Viewing as <select id="role" onchange="draw()" style="width:auto;display:inline-block"><option>Employee</option><option>Timekeeper</option><option>HR</option><option>Admin Manager</option></select></h2><div id="admin"></div></div></div>
-<div class="card" style="margin-top:18px"><h2>Attendance this cutoff</h2><div id="att"></div></div>
-<div class="card" style="margin-top:18px"><h2>Payslip preview (contractor, hourly)</h2><div id="pay"></div></div>
+</style><style>
+.shell{display:grid;grid-template-columns:220px 1fr;gap:16px;margin-top:4px}@media(max-width:820px){.shell{grid-template-columns:1fr}}
+.side{background:var(--card);backdrop-filter:blur(14px);border:1px solid var(--line);border-radius:16px;padding:14px;height:fit-content;position:sticky;top:12px}
+.side a{display:flex;justify-content:space-between;align-items:center;padding:9px 12px;border-radius:10px;color:var(--ink);text-decoration:none;font-weight:500;margin:2px 0}
+.side a.on{background:var(--cocoa);color:#fff}.side a:hover:not(.on){background:var(--blush)}
+.badge{background:#C0392B;color:#fff;border-radius:99px;font-size:11px;padding:1px 7px}
+.who{border-top:1px solid var(--line);margin-top:12px;padding-top:12px}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}.cal .h{font-size:11px;font-weight:700;color:var(--mauve);text-align:center;letter-spacing:.08em}
+.day{min-height:92px;border:1px solid var(--line);border-radius:10px;padding:6px;background:rgba(255,255,255,.35);cursor:pointer;font-size:12px;overflow:hidden}
+[data-theme=dark] .day{background:rgba(255,255,255,.04)}.day:hover{outline:2px solid var(--sky)}.day.off{opacity:.4}.day.we{background:var(--blush)}.day.today{outline:2px solid var(--cocoa)}.day.sel{background:rgba(29,76,147,.18)}
+.ev{border-radius:5px;padding:1px 5px;margin-top:3px;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#fff}
+.Vacation{background:#1D4C93}.Sick{background:#C27C0E}.Personal{background:#2E8B57}.Protected{background:#6B7A86}.Holiday{background:#89CDE7;color:#14384E}.pending{opacity:.6;border:1px dashed #fff}
+.toast{position:fixed;right:18px;bottom:18px;background:var(--cocoa);color:#fff;padding:12px 16px;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.2);opacity:0;transform:translateY(10px);transition:.25s;z-index:9;max-width:340px}.toast.show{opacity:1;transform:none}
+.modal{position:fixed;inset:0;background:rgba(10,30,45,.45);display:none;align-items:center;justify-content:center;z-index:8;padding:16px}.modal.show{display:flex}.modal .card{max-width:480px;width:100%;background:var(--bg1)}
+.row{display:flex;gap:10px}.row>*{flex:1}.legend span{margin-right:10px;font-size:12px}.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:middle}
+.bar{background:var(--blush);border-radius:99px;height:8px;margin-top:4px}.bar div{height:8px;border-radius:99px;background:var(--cocoa)}
+</style><style></style></head><body><div class="wrap">
+<div class="topbar"><span class="brand">TIMEKEEPING PORTAL · DEMO</span><span><button class="ghost" style="margin:0;padding:6px 12px" onclick="resetAll()">↺ Reset demo data</button> <button class="ghost" id="themeBtn" style="margin:0;padding:6px 12px" onclick="toggleTheme()">🌙 Dark</button></span></div>
+<div class="shell"><nav class="side"><a href="#/dashboard" data-r="dashboard">🏠 Dashboard <span class="badge" data-b="dashboard"></span></a>
+<a href="#/clock" data-r="clock">⏱ Time clock <span class="badge" data-b="clock"></span></a>
+<a href="#/timesheets" data-r="timesheets">🗓 Timesheets <span class="badge" data-b="timesheets"></span></a>
+<a href="#/approvals" data-r="approvals">✅ Approvals <span class="badge" data-b="approvals"></span></a>
+<a href="#/leave" data-r="leave">🏖 Leave <span class="badge" data-b="leave"></span></a>
+<a href="#/payroll" data-r="payroll">💵 Payroll & payslips <span class="badge" data-b="payroll"></span></a>
+<a href="#/people" data-r="people">👥 People & roles <span class="badge" data-b="people"></span></a>
+<a href="#/imports" data-r="imports">📥 Imports <span class="badge" data-b="imports"></span></a>
+<a href="#/activity" data-r="activity">🔔 Activity <span class="badge" data-b="activity"></span></a><div class='who'><label>Signed in as (demo)</label><select id='meSel' onchange="S.me=this.value;route()"></select><p class='muted' id='roleL'></p></div></nav><main id="view"></main></div>
+<div class="modal" id="modal" onclick="if(event.target==this)closeM()"><div class="card" id="mbody"></div></div><div class="toast" id="toast"></div>
+<footer>Portfolio rebuild by <b>Nae Kitakado</b>, AI Automation Consultant · <a href="https://github.com/naekitakadoportfolio/hr-timekeeping-portal">Source</a> · <a href="https://www.linkedin.com/in/nae-k-203194265">LinkedIn</a><br>All data is fictional. Changes are saved in your browser only.</footer></div>
 <script>
-const $=i=>document.getElementById(i);const P={"Ava Reyes":{rate:6.5,type:"Full-time contractor",leave:10},"Ben Cruz":{rate:5,type:"Hourly contractor",leave:5}};
-const S={"Ava Reyes":[["2026-11-02",8,"approved"],["2026-11-03",7.5,"approved"]],"Ben Cruz":[["2026-11-02",6,"approved"]]};let on={},log=[];
-Object.keys(P).forEach(n=>$("emp").add(new Option(n)));
-function clockT(){const n=$("emp").value;if(on[n]){const h=+((Date.now()-on[n])/36e5*3600).toFixed(2);S[n].push([new Date().toISOString().slice(0,10),Math.max(h,0.5),"approved"]);delete on[n]}else on[n]=Date.now();draw()}
-function addShift(){const n=$("emp").value;S[n].push([$("cd").value,+$("ch").value,"pending"]);draw()}
-function act(n,i,s){S[n][i][2]=s;draw()}
-function draw(){const n=$("emp").value,role=$("role").value,p=P[n],sh=S[n];
- $("clock").innerHTML=`<button onclick="clockT()">${on[n]?"CLOCK OUT":"CLOCK IN"}</button> ${on[n]?'<span class="pill low">on shift</span>':'<span class="pill medium">off shift</span>'} <span class="muted">(demo: 1 real second = 1 hour)</span>`;
- const ok=sh.filter(s=>s[2]=="approved"),hrs=ok.reduce((a,s)=>a+s[1],0);
- $("att").innerHTML="<table><tr><th>Date</th><th>Hours</th><th>Status</th><th></th></tr>"+sh.map((s,i)=>`<tr><td>${s[0]}</td><td>${s[1]}</td><td><span class="pill ${s[2]=='approved'?'low':s[2]=='rejected'?'high':'medium'}">${s[2]}</span></td><td>${s[2]=='pending'&&role!='Employee'?`<button style="padding:4px 12px;margin:0" onclick="act('${n}',${i},'approved')">Approve</button> <button class="ghost" style="padding:4px 12px;margin:0" onclick="act('${n}',${i},'rejected')">Reject</button>`:''}</td></tr>`).join("")+"</table>";
- const gross=hrs*p.rate;$("pay").innerHTML=`<table><tr><th>Contractor</th><td>${n} · ${p.type}</td></tr><tr><th>Approved hours</th><td>${hrs.toFixed(2)}</td></tr><tr><th>Rate</th><td>$${p.rate}/hr</td></tr><tr><th>Gross</th><td><b>$${gross.toFixed(2)}</b></td></tr><tr><th>Leave balance</th><td>${p.leave} days</td></tr></table>${role=='Employee'?'<p class="muted">Employees see their own payslip only.</p>':'<button class="ghost">EXPORT INVOICE CSV</button>'}`;
- $("admin").innerHTML=role=="Employee"?"<p class='muted'>Self-service: clock in/out, submit corrections, view your own payslip and leave.</p>":`<p><b>${role} tools</b></p><ul>${({Timekeeper:["Approve time corrections","Flag missing clock-outs"],HR:["Approve corrections","Upload leave-history CSV","Manage leave policy"],"Admin Manager":["All HR tools","Payroll export","Role management","Ownership handover"]}[role]).map(x=>`<li>${x}</li>`).join("")}</ul><p class="muted">${Object.values(S).flat().filter(s=>s[2]=='pending').length} correction(s) waiting.</p>`}
-draw();
-</script>
-<footer>Built by <b>Nae Kitakado</b>, AI Automation Consultant · <a href="https://github.com/naekitakadoportfolio">GitHub</a> · <a href="https://www.linkedin.com/in/nae-k-203194265">LinkedIn</a> · <a href="https://sider.ai/agents/web-creator/share/695ea81100a621619985fdfb">Portfolio</a><br>All data is fictional. This demo runs entirely in your browser.</footer></div></body></html>
+const FX={USD:1,PHP:58.2,PKR:278};const CUT=[["2026-11-01","2026-11-15"],["2026-10-16","2026-10-31"]];
+function SEED(){return{me:"Ava Reyes",cur:"USD",cut:0,nid:20,
+ people:[{n:"Ava Reyes",role:"Employee",type:"Full-time contractor",pay:"fixed",rate:1100,cc:"PHP",country:"PH",leave:{Vacation:12,Sick:5}},
+  {n:"Ben Cruz",role:"Employee",type:"Hourly contractor",pay:"hourly",rate:6.5,cc:"PHP",country:"PH",leave:{Vacation:5,Sick:3}},
+  {n:"Sara Khan",role:"Employee",type:"Hourly contractor",pay:"hourly",rate:7,cc:"PKR",country:"PK",leave:{Vacation:0,Sick:0}},
+  {n:"Tina Go",role:"Timekeeper",type:"Full-time contractor",pay:"fixed",rate:900,cc:"PHP",country:"PH",leave:{Vacation:12,Sick:5}},
+  {n:"Hana Sy",role:"HR",type:"Full-time contractor",pay:"fixed",rate:1300,cc:"PHP",country:"PH",leave:{Vacation:12,Sick:5}},
+  {n:"Ivy Ong",role:"Admin Manager",type:"Full-time contractor",pay:"fixed",rate:1500,cc:"PHP",country:"PH",leave:{Vacation:15,Sick:5}}],
+ shifts:[["Ava Reyes","2026-11-02",8,0.5],["Ava Reyes","2026-11-03",7.5,0.5],["Ava Reyes","2026-11-04",8,1],["Ben Cruz","2026-11-02",6,0.5],["Ben Cruz","2026-11-03",7,0.5],["Ben Cruz","2026-11-04",5.5,0],["Sara Khan","2026-11-02",8,1],["Sara Khan","2026-11-03",8,1],["Ava Reyes","2026-10-20",8,1],["Ben Cruz","2026-10-21",6,0.5]].map((s,i)=>({id:i+1,n:s[0],d:s[1],h:s[2],br:s[3],st:"approved",src:"clock"})),
+ corr:[{id:1,n:"Ben Cruz",d:"2026-11-01",h:4,reason:"Forgot to clock in for Sunday cover",st:"pending"}],
+ leaves:[{id:1,n:"Ava Reyes",t:"Vacation",s:"2026-11-24",e:"2026-11-25",st:"approved"},{id:2,n:"Ben Cruz",t:"Sick",s:"2026-11-06",e:"2026-11-06",st:"pending"}],
+ submitted:{},clock:{},log:[{t:"Nov 4, 18:02",m:"⏱ Ava Reyes clocked out (8.0h)"}],importPrev:null}}
+const P=n=>S.people.find(p=>p.n==n),ME=()=>P(S.me),isAdmin=()=>["Timekeeper","HR","Admin Manager"].includes(ME().role);
+const money=(usd)=>{const c=S.cur;const v=usd*FX[c];return({USD:"$",PHP:"₱",PKR:"Rs "}[c])+v.toLocaleString(undefined,{maximumFractionDigits:2,minimumFractionDigits:2})};
+const iso=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+const fmt=d=>new Date(d+"T00:00").toLocaleDateString("en-US",{month:"short",day:"numeric"});
+function inCut(d,c){const[a,b]=CUT[c??S.cut];return d>=a&&d<=b}
+function hours(n,c){return S.shifts.filter(s=>s.n==n&&s.st=="approved"&&inCut(s.d,c)).reduce((a,s)=>a+s.h,0)}
+function wd(a,b){let n=0;for(let d=new Date(a+"T00:00");d<=new Date(b+"T00:00");d.setDate(d.getDate()+1))if(d.getDay()%6)n++;return n}
+function used(n,t){return S.leaves.filter(l=>l.n==n&&l.t==t&&l.st=="approved").reduce((a,l)=>a+wd(l.s,l.e),0)}
+function gross(p){return p.pay=="fixed"?p.rate/2:hours(p.n)*p.rate}
+function badge(r){if(r=="approvals"&&isAdmin())return S.corr.filter(c=>c.st=="pending").length+S.leaves.filter(l=>l.st=="pending").length||""}
+const V={};
+V.dashboard=()=>{const me=ME(),on=Object.keys(S.clock).length,pend=S.corr.filter(c=>c.st=="pending").length+S.leaves.filter(l=>l.st=="pending").length;
+ return`<div class="hero"><span class="tag">TIMEKEEPING & PAYROLL SUPPORT</span><h1>Hi ${me.n.split(" ")[0]} 👋</h1><p>${me.role} · ${me.type} · cutoff ${fmt(CUT[S.cut][0])}–${fmt(CUT[S.cut][1])}</p></div>
+ <div class="card" style="margin-top:16px"><div class="kpi"><div><b>${hours(me.n).toFixed(1)}</b>my approved hours</div><div><b>${(me.leave.Vacation-used(me.n,"Vacation"))}</b>vacation days left</div><div><b>${on}</b>on shift now</div>${isAdmin()?`<div><b>${pend}</b>items to approve</div><div><b>${money(S.people.reduce((a,p)=>a+gross(p),0))}</b>cutoff payroll</div>`:""}</div></div>
+ <div class="grid"><div class="card"><h2>Quick actions</h2><button onclick="go('clock')">${S.clock[me.n]?"⏹ Clock out":"▶ Clock in"}</button> <button class="ghost" onclick="go('leave')">Request leave</button> <button class="ghost" onclick="go('timesheets')">My timesheet</button></div>
+ <div class="card"><h2>Who's on shift</h2>${Object.keys(S.clock).map(n=>`<div>🟢 <b>${n}</b> since ${new Date(S.clock[n].start).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}${S.clock[n].brk?' <span class="pill medium">on break</span>':""}</div>`).join("")||"<p class='muted'>Nobody is clocked in.</p>"}</div></div>`};
+V.clock=()=>{const me=ME(),c=S.clock[me.n];
+ return`<div class="grid"><div class="card"><h2>Time clock</h2><p style="font-size:42px;font-weight:700;margin:10px 0" id="tmr">${c?"00:00:00":"—"}</p><p class="muted">Demo speed: 1 real second = 1 minute.</p>
+ ${c?`<button onclick="clockOut()">⏹ CLOCK OUT</button> <button class="ghost" onclick="brk()">${c.brk?"▶ End break":"☕ Start break"}</button>`:`<button onclick="clockIn()">▶ CLOCK IN</button>`}</div>
+ <div class="card"><h2>Today's shifts</h2>${S.shifts.filter(s=>s.n==me.n).slice(-5).reverse().map(s=>`<div>${fmt(s.d)} · ${s.h}h worked · ${s.br}h break <span class="pill ${s.st=='approved'?'low':'medium'}">${s.st}</span></div>`).join("")}</div></div>`};
+let tick;function onRoute(r){clearInterval(tick);const s=$("meSel");if(s){s.innerHTML=S.people.map(p=>`<option ${p.n==S.me?"selected":""}>${p.n}</option>`).join("");$("roleL").textContent=ME().role}
+ if(r=="clock"&&S.clock[S.me]){tick=setInterval(()=>{const c=S.clock[S.me];if(!c||!$("tmr"))return clearInterval(tick);const m=Math.floor((Date.now()-c.start-c.brkMs)/1000);$("tmr").textContent=`${String(Math.floor(m/60)).padStart(2,"0")}:${String(m%60).padStart(2,"0")}:00`},500)}}
+function clockIn(){S.clock[S.me]={start:Date.now(),brk:null,brkMs:0};L(`▶ ${S.me} clocked in`);toast("Clocked in");route()}
+function brk(){const c=S.clock[S.me];if(c.brk){c.brkMs+=Date.now()-c.brk;c.brk=null;L(`▶ ${S.me} ended break`)}else{c.brk=Date.now();L(`☕ ${S.me} started break`)}route()}
+function clockOut(){const c=S.clock[S.me];if(c.brk){c.brkMs+=Date.now()-c.brk}const h=Math.max(0.25,+(((Date.now()-c.start-c.brkMs)/1000)/60).toFixed(2));S.shifts.push({id:S.nid++,n:S.me,d:"2026-11-05",h,br:+(c.brkMs/60000).toFixed(2),st:"approved",src:"clock"});delete S.clock[S.me];L(`⏹ ${S.me} clocked out (${h}h)`);toast(`Clocked out · ${h}h logged`);route()}
+V.timesheets=()=>{const who=isAdmin()?(S.tsWho||S.me):S.me,[a,b]=CUT[S.cut],days=[];for(let d=new Date(a+"T00:00");d<=new Date(b+"T00:00");d.setDate(d.getDate()+1))days.push(iso(d));const key=who+"|"+S.cut;
+ return`<div class="card"><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between"><h2 style="margin:0">Timesheet · ${who}</h2><span>${isAdmin()?`<select style="width:auto" onchange="S.tsWho=this.value;route()">${S.people.map(p=>`<option ${p.n==who?"selected":""}>${p.n}</option>`).join("")}</select>`:""} <select style="width:auto" onchange="S.cut=+this.value;route()">${CUT.map((c,i)=>`<option value="${i}" ${i==S.cut?"selected":""}>${fmt(c[0])} – ${fmt(c[1])}</option>`).join("")}</select></span></div>
+ <div class="cal" style="margin-top:12px">${["SUN","MON","TUE","WED","THU","FRI","SAT"].map(h=>`<div class="h">${h}</div>`).join("")}${Array(new Date(a+"T00:00").getDay()).fill('<div></div>').join("")}${days.map(d=>{const s=S.shifts.filter(x=>x.n==who&&x.d==d),h=s.reduce((t,x)=>t+(x.st=="approved"?x.h:0),0),lv=S.leaves.find(l=>l.n==who&&l.st=="approved"&&l.s<=d&&l.e>=d);return`<div class="day ${new Date(d+"T00:00").getDay()%6==0?"we":""}" style="min-height:70px"><b>${+d.slice(8)}</b>${h?`<div class="ev Vacation">${h.toFixed(1)}h</div>`:""}${lv?`<div class="ev Personal">${lv.t}</div>`:""}${s.some(x=>x.st!="approved")?'<div class="ev Sick">pending</div>':""}</div>`}).join("")}</div>
+ <div class="kpi" style="margin-top:12px"><div><b>${hours(who).toFixed(2)}</b>approved hours</div><div><b>${S.submitted[key]?"Submitted":"Draft"}</b>status</div></div>
+ ${who==S.me&&!S.submitted[key]?`<button onclick="S.submitted['${key}']=true;L('📤 ${who} submitted timesheet for cutoff ${S.cut+1}');toast('Timesheet submitted to Timekeeper');route()">SUBMIT TIMESHEET</button>`:""} <button class="ghost" onclick="corrM()">+ Request correction</button></div>`};
+function corrM(){openM(`<h2>Time correction</h2><label>Date</label><input type="date" id="cd" value="2026-11-01"><label>Hours</label><input type="number" id="ch" value="4" step="0.25"><label>Reason (required)</label><textarea id="cr" style="min-height:60px"></textarea><button onclick="subCorr()">Submit</button> <button class="ghost" onclick="closeM()">Cancel</button>`)}
+function subCorr(){const h=+$("ch").value,r=$("cr").value.trim();if(!(h>0&&h<=16))return toast("Hours must be between 0 and 16");if(r.length<5)return toast("Please give a reason");S.corr.push({id:S.nid++,n:S.me,d:$("cd").value,h,reason:r,st:"pending"});L(`📝 ${S.me} requested a ${h}h correction for ${fmt($("cd").value)}`);closeM();toast("Correction sent for approval");route()}
+V.approvals=()=>{if(!isAdmin())return`<div class="card"><h2>Approvals</h2><p class="muted">Only Timekeeper, HR and Admin Manager can approve. Switch user in the sidebar (e.g. Tina Go).</p></div>`;
+ const c=S.corr.filter(x=>x.st=="pending"),l=S.leaves.filter(x=>x.st=="pending");
+ return`<div class="grid"><div class="card"><h2>Time corrections (${c.length})</h2>${c.map(x=>`<div style="border:1px solid var(--line);border-radius:12px;padding:10px;margin:6px 0"><b>${x.n}</b> · ${fmt(x.d)} · ${x.h}h<br><span class="muted">“${esc(x.reason)}”</span><div><button onclick="dec('corr',${x.id},1)">Approve</button> <button class="ghost" onclick="dec('corr',${x.id},0)">Reject</button></div></div>`).join("")||"<p class='muted'>Nothing pending.</p>"}</div>
+ <div class="card"><h2>Leave requests (${l.length})</h2>${l.map(x=>`<div style="border:1px solid var(--line);border-radius:12px;padding:10px;margin:6px 0"><b>${x.n}</b> · ${x.t} · ${fmt(x.s)}–${fmt(x.e)} (${wd(x.s,x.e)}d)<br><span class="muted">Balance after: ${P(x.n).leave[x.t]-used(x.n,x.t)-wd(x.s,x.e)}d</span><div>${ME().role=="Timekeeper"?'<span class="pill medium">HR approves leave</span>':`<button onclick="dec('leave',${x.id},1)">Approve</button> <button class="ghost" onclick="dec('leave',${x.id},0)">Reject</button>`}</div></div>`).join("")||"<p class='muted'>Nothing pending.</p>"}</div></div>`};
+function dec(k,id,ok){if(k=="corr"){const x=S.corr.find(c=>c.id==id);x.st=ok?"approved":"rejected";if(ok)S.shifts.push({id:S.nid++,n:x.n,d:x.d,h:x.h,br:0,st:"approved",src:"correction"});L(`${ok?"✅":"❌"} ${S.me} ${ok?"approved":"rejected"} ${x.n}'s ${x.h}h correction`)}else{const x=S.leaves.find(c=>c.id==id);x.st=ok?"approved":"rejected";L(`${ok?"✅":"❌"} ${S.me} ${ok?"approved":"rejected"} ${x.n}'s ${x.t} leave`)}toast(ok?"Approved":"Rejected");route()}
+V.leave=()=>{const me=ME(),ym=S.ym||"2026-11",[y,m]=ym.split("-").map(Number),f=new Date(y,m-1,1),st=new Date(f);st.setDate(1-f.getDay());let cells="";for(let i=0;i<35;i++){const d=new Date(st);d.setDate(st.getDate()+i);const k=iso(d),ev=S.leaves.filter(l=>l.st!="rejected"&&l.s<=k&&l.e>=k);cells+=`<div class="day ${d.getMonth()!=m-1?"off":""} ${d.getDay()%6==0?"we":""}" style="min-height:70px"><b>${d.getDate()}</b>${ev.map(l=>`<div class="ev ${l.t=='Sick'?'Sick':'Vacation'} ${l.st!='approved'?'pending':''}">${l.n.split(" ")[0]} · ${l.t}</div>`).join("")}</div>`}
+ return`<div class="grid"><div class="card"><h2>Request leave</h2><label>Type</label><select id="lt">${Object.keys(me.leave).map(t=>`<option>${t}</option>`).join("")}</select><div class="row"><div><label>Start</label><input type="date" id="ls" value="2026-12-14"></div><div><label>End</label><input type="date" id="le" value="2026-12-15"></div></div><button onclick="reqLeave()">SUBMIT</button>
+ <h2 style="margin-top:16px">My balances (policy)</h2>${Object.entries(me.leave).map(([t,a])=>`<div>${t}: <b>${a-used(me.n,t)}</b> of ${a} days<div class="bar"><div style="width:${a?(a-used(me.n,t))/a*100:0}%"></div></div></div>`).join("")}${me.country=="PK"?'<p class="muted">Hourly contractors outside PH: unpaid leave only.</p>':""}</div>
+ <div class="card"><div style="display:flex;justify-content:space-between"><button class="ghost" style="margin:0" onclick="S.ym='2026-'+String(Math.max(1,${m}-1)).padStart(2,'0');route()">‹</button><b>${f.toLocaleDateString("en-US",{month:"long",year:"numeric"})}</b><button class="ghost" style="margin:0" onclick="S.ym='2026-'+String(Math.min(12,${m}+1)).padStart(2,'0');route()">›</button></div><div class="cal" style="margin-top:8px">${["S","M","T","W","T","F","S"].map(h=>`<div class="h">${h}</div>`).join("")}${cells}</div></div></div>`};
+function reqLeave(){const me=ME(),t=$("lt").value,s=$("ls").value,e=$("le").value;if(!s||!e||e<s)return toast("Pick a valid range");const n=wd(s,e),left=me.leave[t]-used(me.n,t);if(n>left&&me.country!="PK")return toast(`⛔ Only ${left} ${t} days left`);S.leaves.push({id:S.nid++,n:me.n,t,s,e,st:"pending"});L(`🏖 ${me.n} requested ${t} ${fmt(s)}–${fmt(e)}`);toast("Leave request sent to HR");route()}
+V.payroll=()=>{const all=isAdmin(),list=all?S.people:[ME()];
+ return`<div class="card"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;align-items:center"><h2 style="margin:0">Payroll · cutoff ${fmt(CUT[S.cut][0])}–${fmt(CUT[S.cut][1])}</h2><span>Display currency <select style="width:auto" onchange="S.cur=this.value;route()">${Object.keys(FX).map(c=>`<option ${c==S.cur?"selected":""}>${c}</option>`).join("")}</select></span></div>
+ <table style="margin-top:10px"><tr><th>Contractor</th><th>Type</th><th>Hours</th><th>Rate (USD)</th><th>Gross</th><th>Local (${"pay ccy"})</th><th></th></tr>${list.map(p=>`<tr><td>${p.n}</td><td>${p.type}</td><td>${p.pay=="hourly"?hours(p.n).toFixed(2):"—"}</td><td>${p.pay=="hourly"?"$"+p.rate+"/hr":"$"+p.rate+"/mo"}</td><td><b>${money(gross(p))}</b></td><td class="muted">${p.cc} ${(gross(p)*FX[p.cc]).toLocaleString(undefined,{maximumFractionDigits:0})}</td><td><button class="ghost" style="margin:0;padding:4px 10px" onclick="slip('${p.n}')">Payslip</button></td></tr>`).join("")}</table>
+ ${all?`<button onclick="exportCSV()">⬇ EXPORT INVOICE CSV</button>`:'<p class="muted">You can only see your own payslip.</p>'}<p class="muted">Demo FX: 1 USD = ${FX.PHP} PHP = ${FX.PKR} PKR.</p></div>`};
+function slip(n){const p=P(n);openM(`<h2>Payslip · ${n}</h2><table><tr><th>Period</th><td>${fmt(CUT[S.cut][0])} – ${fmt(CUT[S.cut][1])}</td></tr><tr><th>Type</th><td>${p.type}</td></tr><tr><th>Hours</th><td>${hours(n).toFixed(2)}</td></tr><tr><th>Gross</th><td><b>${money(gross(p))}</b></td></tr><tr><th>Paid in</th><td>${p.cc} ${(gross(p)*FX[p.cc]).toLocaleString(undefined,{maximumFractionDigits:2})}</td></tr><tr><th>Leave taken</th><td>${Object.keys(p.leave).map(t=>t+" "+used(n,t)+"d").join(", ")}</td></tr></table><button class="ghost" onclick="closeM()">Close</button>`)}
+function exportCSV(){const rows=[["contractor","type","hours","gross_usd","pay_currency","gross_local"],...S.people.map(p=>[p.n,p.type,hours(p.n).toFixed(2),gross(p).toFixed(2),p.cc,(gross(p)*FX[p.cc]).toFixed(2)])];const b=new Blob([rows.map(r=>r.join(",")).join("\n")],{type:"text/csv"});const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=`invoice_cutoff_${S.cut+1}.csv`;a.click();L(`⬇ ${S.me} exported invoice CSV`);toast("CSV downloaded")}
+V.people=()=>{const ad=ME().role=="Admin Manager"||ME().role=="HR";
+ return`<div class="card"><h2>People & roles</h2>${ad?"":"<p class='muted'>Only HR and Admin Manager can edit.</p>"}<table><tr><th>Name</th><th>Role</th><th>Type</th><th>Country</th><th>Rate</th></tr>${S.people.map((p,i)=>`<tr><td>${p.n}</td><td>${ad?`<select onchange="S.people[${i}].role=this.value;L('🧩 ${p.n} role → '+this.value);route()">${["Employee","Timekeeper","HR","Admin Manager"].map(r=>`<option ${r==p.role?"selected":""}>${r}</option>`).join("")}</select>`:p.role}</td><td>${p.type}</td><td>${p.country}</td><td>${ad?`<input type="number" value="${p.rate}" style="width:90px" onchange="if(+this.value>0){S.people[${i}].rate=+this.value;L('💲 ${p.n} rate updated');route()}">`:"•••"}</td></tr>`).join("")}</table>
+ ${ad?`<h2 style="margin-top:14px">Add contractor</h2><div class="row"><input id="nn" placeholder="Full name"><select id="nt"><option>Hourly contractor</option><option>Full-time contractor</option></select><select id="nc"><option>PH</option><option>PK</option></select></div><button class="ghost" onclick="addP()">Add</button>`:""}</div>`};
+function addP(){const n=$("nn").value.trim();if(n.length<3)return toast("Enter a name");if(P(n))return toast("Already exists");const h=$("nt").value.startsWith("Hourly"),pk=$("nc").value=="PK";S.people.push({n,role:"Employee",type:$("nt").value,pay:h?"hourly":"fixed",rate:h?6:1000,cc:pk?"PKR":"PHP",country:$("nc").value,leave:pk?{Vacation:0,Sick:0}:{Vacation:12,Sick:5}});L(`➕ ${S.me} added ${n}`);toast("Contractor added");route()}
+V.imports=()=>{const ad=["HR","Admin Manager"].includes(ME().role);if(!ad)return`<div class="card"><h2>Imports</h2><p class="muted">HR or Admin Manager only.</p></div>`;const pv=S.importPrev;
+ return`<div class="card"><h2>Import historical leave (CSV)</h2><p class="muted">Columns: name,type,start,end</p><textarea id="imp" style="font-family:monospace;font-size:12px">name,type,start,end
+Ava Reyes,Vacation,2026-09-08,2026-09-09
+Ben Cruz,Sick,2026-09-15,2026-09-15
+Unknown Person,Vacation,2026-09-20,2026-09-21
+Ben Cruz,Holiday,2026-09-22,2026-09-22</textarea><button onclick="prevImp()">PREVIEW</button>
+ ${pv?`<h2 style="margin-top:14px">Preview</h2><table><tr><th>Row</th><th>Name</th><th>Type</th><th>Dates</th><th>Result</th></tr>${pv.map((r,i)=>`<tr><td>${i+1}</td><td>${esc(r.n)}</td><td>${esc(r.t)}</td><td>${esc(r.s)} → ${esc(r.e)}</td><td>${r.err?`<span class="pill high">${r.err}</span>`:'<span class="pill low">ok</span>'}</td></tr>`).join("")}</table><button onclick="applyImp()">APPLY ${pv.filter(r=>!r.err).length} VALID ROWS</button>`:""}</div>`};
+function prevImp(){const [h,...l]=$("imp").value.trim().split("\n");S.importPrev=l.map(x=>{const [n,t,s,e]=x.split(",").map(v=>(v||"").trim());let err="";if(!P(n))err="unknown person";else if(!P(n).leave.hasOwnProperty(t))err="unknown leave type";else if(!/^\d{4}-\d\d-\d\d$/.test(s)||!/^\d{4}-\d\d-\d\d$/.test(e)||e<s)err="bad dates";return{n,t,s,e,err}});route()}
+function applyImp(){const ok=S.importPrev.filter(r=>!r.err);ok.forEach(r=>S.leaves.push({id:S.nid++,n:r.n,t:r.t,s:r.s,e:r.e,st:"approved"}));L(`📥 ${S.me} imported ${ok.length} historical leave rows`);S.importPrev=null;toast(`Imported ${ok.length} rows · balances updated`);route()}
+V.activity=()=>`<div class="card"><h2>Activity</h2>${S.log.map(l=>`<div style="padding:6px 0;border-bottom:1px solid var(--line)"><span class="muted">${l.t}</span> · ${l.m}</div>`).join("")}</div>`;
+
+
+const $=i=>document.getElementById(i);const esc=s=>String(s??"").replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
+const KEY="hrtDemo";let S;try{S=JSON.parse(localStorage.getItem(KEY))||SEED()}catch(e){S=SEED()}if(!S.log)S.log=[];
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function toast(m){const t=$("toast");t.innerHTML=m;t.classList.add("show");clearTimeout(t._);t._=setTimeout(()=>t.classList.remove("show"),3000)}
+function L(m){S.log.unshift({t:new Date().toLocaleString("en-US",{month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"}),m});if(S.log.length>200)S.log.length=200}
+function openM(h){$("mbody").innerHTML=h;$("modal").classList.add("show")}function closeM(){$("modal").classList.remove("show")}
+function go(r){location.hash="#/"+r}
+function route(){const r=(location.hash.replace("#/","").split("?")[0]||Object.keys(V)[0]);document.querySelectorAll(".side a").forEach(a=>a.classList.toggle("on",a.dataset.r==r));
+ try{$("view").innerHTML=(V[r]||V[Object.keys(V)[0]])()}catch(e){console.error(e);$("view").innerHTML='<div class="card"><h2>Something went wrong</h2><p class="muted">'+esc(e.message)+'</p></div>'}
+ document.querySelectorAll("[data-b]").forEach(b=>{const v=typeof badge=="function"?badge(b.dataset.b):"";b.textContent=v||"";b.style.display=v?"":"none"});
+ if(typeof onRoute=="function")onRoute(r);save()}
+function resetAll(){S=SEED();S.log=S.log||[];save();toast("Demo data reset");route()}
+function toggleTheme(){const h=document.documentElement,n=h.dataset.theme=="dark"?"light":"dark";h.dataset.theme=n;try{localStorage.setItem("demoTheme",n)}catch(e){}$("themeBtn").textContent=n=="dark"?"☀️ Light":"🌙 Dark"}
+try{const t=localStorage.getItem("demoTheme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.dataset.theme=t;$("themeBtn").textContent=t=="dark"?"☀️ Light":"🌙 Dark"}catch(e){}
+addEventListener("hashchange",route);addEventListener("keydown",e=>{if(e.key=="Escape")closeM()});route();
+
+</script></body></html>
